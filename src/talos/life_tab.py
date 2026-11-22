@@ -128,6 +128,9 @@ class LifeTab(QWidget):
         self.btn_random.clicked.connect(self._randomize)
         self.speed.valueChanged.connect(self._sync_speed)
 
+        # never greet the user with a dead universe
+        self._randomize()
+
     # ── actions ─────────────────────────────────────────────────────
     def _toggle_play(self):
         if self.timer.isActive():
