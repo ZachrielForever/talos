@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QVBoxLayout, QWidget,
 )
 
+from .blackjack_tab import BlackjackTab
 from .life_tab import LifeTab
 from .matter_tab import MatterTab
 
@@ -88,7 +89,10 @@ class MainWindow(QMainWindow):
             BucketPage([("Life", LifeTab()),
                         ("Matter", MatterTab())]),
             "Toys")
-        self.tabs.addTab(GamesPlaceholder(), "Games")
+        self.tabs.addTab(
+            BucketPage([("Blackjack", BlackjackTab()),
+                        ("More soon — Slots", GamesPlaceholder())]),
+            "Games")
 
         self.setCentralWidget(self.tabs)
 
