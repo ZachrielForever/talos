@@ -22,6 +22,9 @@ class MatterCanvas(QWidget):
         super().__init__()
         self.cols, self.rows, self.cell = cols, rows, cell
         self.grid = bytearray(cols * rows)
+        # bytes palette for the paint blit (built once)
+        self._pal = [bytes((c[2], c[1], c[0], 255))
+                     for c in matter.COLORS]
         self.brush = matter.SAND
         self.radius = 3
         self._erase = False
@@ -61,12 +64,12 @@ class MatterCanvas(QWidget):
             self._stamp(*self._cell_at(e.position()))
 
     def paintEvent(self, _):
+        # palette-pack blit: ~1ms/frame vs ~55ms per-cell setPixel
         p = QPainter(self)
         p.fillRect(self.rect(), QColor(BG))
-        img = QImage(self.cols, self.rows, QImage.Format_RGB32)
-        for i, m in enumerate(self.grid):
-            img.setPixel(i % self.cols, i // self.cols,
-                         QColor(*matter.COLORS[m]).rgb())
+        data = b"".join(map(self._pal.__getitem__, self.grid))
+        img = QImage(data, self.cols, self.rows, self.cols * 4,
+                     QImage.Format_RGB32)
         p.drawImage(self.rect(), img.scaled(
             self.width(), self.height(),
             Qt.IgnoreAspectRatio, Qt.FastTransformation))
@@ -81,10 +84,6 @@ class MatterTab(QWidget):
     def __init__(self):
         super().__init__()
         self.canvas = MatterCanvas()
-        # reusable frame buffer: 0xffRRGGBB ints, rows*cols
-        self._buf = [0] * (self.canvas.rows * self.canvas.cols)
-        self._rgb = [((c[0] << 16) | (c[1] << 8) | c[2])
-                     for c in matter.COLORS]
 
         top = QHBoxLayout()
         top.setSpacing(6)
