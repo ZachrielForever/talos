@@ -18,7 +18,7 @@ class MatterCanvas(QWidget):
     """Paints the flat bytearray grid, scaled up. Click/drag paints
     the selected matter; right-drag erases."""
 
-    def __init__(self, cols: int = 140, rows: int = 90, cell: int = 4):
+    def __init__(self, cols: int = 280, rows: int = 180, cell: int = 2):
         super().__init__()
         self.cols, self.rows, self.cell = cols, rows, cell
         self.grid = bytearray(cols * rows)
@@ -54,11 +54,11 @@ class MatterCanvas(QWidget):
 
     def mousePressEvent(self, e):
         self._erase = e.button() == Qt.RightButton
-        self._stamp(*reversed(self._cell_at(e.position())))
+        self._stamp(*self._cell_at(e.position()))
 
     def mouseMoveEvent(self, e):
         if e.buttons() & (Qt.LeftButton | Qt.RightButton):
-            self._stamp(*reversed(self._cell_at(e.position())))
+            self._stamp(*self._cell_at(e.position()))
 
     def paintEvent(self, _):
         p = QPainter(self)
@@ -81,6 +81,10 @@ class MatterTab(QWidget):
     def __init__(self):
         super().__init__()
         self.canvas = MatterCanvas()
+        # reusable frame buffer: 0xffRRGGBB ints, rows*cols
+        self._buf = [0] * (self.canvas.rows * self.canvas.cols)
+        self._rgb = [((c[0] << 16) | (c[1] << 8) | c[2])
+                     for c in matter.COLORS]
 
         top = QHBoxLayout()
         top.setSpacing(6)
@@ -95,8 +99,8 @@ class MatterTab(QWidget):
         top.addWidget(self.btn_wall_floor)
         top.addWidget(QLabel("brush"))
         self.brush_size = QSlider(Qt.Horizontal)
-        self.brush_size.setRange(1, 10)
-        self.brush_size.setValue(3)
+        self.brush_size.setRange(1, 14)
+        self.brush_size.setValue(4)
         top.addWidget(self.brush_size, stretch=1)
 
         pal = QGridLayout()
